@@ -101,7 +101,7 @@ def build_dataloader(dataset, batch, workers, shuffle=True, rank=-1):
     return InfiniteDataLoader(dataset=dataset,
                               batch_size=batch,
                               shuffle=shuffle and sampler is None,
-                              num_workers=nw,
+                              num_workers= nw,
                               sampler=sampler,
                               pin_memory=PIN_MEMORY,
                               collate_fn=getattr(dataset, 'collate_fn', None),
