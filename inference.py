@@ -43,14 +43,15 @@ if __name__ == '__main__':
     os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    test_folder = r'Y:\datasets\Datathoni3CE2023\train\images'
+    test_img_folder = r'Y:\datasets\Datathoni3CE2023\val\images'
+    # test_label_folder = r'Y:\datasets\Datathoni3CE2023\val\labels'
     output_folder = r'Y:\datasets\Datathoni3CE2023\temp_output'
-    model_folder = r'runs\detect\best_storage'
-    model = YOLO(os.path.join(model_folder, "YOLOv8x_best_gunwoo_20230614.pt"))
-    model_human = YOLO(os.path.join(model_folder, "YOLOv8x_best_human_85.pt"))
+    model_folder = r'F:\F_coding_projects\ultralytics\runs\detect\i3CE2023-datathon-weights\2023-06-19-15-51'
+    model = YOLO(os.path.join(model_folder, "general.pt"))
+    model_human = YOLO(os.path.join(model_folder, "human.pt"))
     # iterate through this folder for image files
     count = 0
-    for root, dirs, files in os.walk(test_folder):
+    for root, dirs, files in os.walk(test_img_folder):
         for file in files:
             if file.endswith(".jpg") or file.endswith(".png") or file.endswith(".jpeg"):
                 count += 1
@@ -60,16 +61,16 @@ if __name__ == '__main__':
     coco_general = []
     coco_human = []
     coco_merged = []
-    for root, dirs, files in os.walk(test_folder):
+    for root, dirs, files in os.walk(test_img_folder):
         for file in files:
             if file.endswith(".jpg") or file.endswith(".png") or file.endswith(".jpeg"):
                 image_id += 1
                 print(f"Processing {image_id} / {count}: {file}", end='\r')
                 image_path = os.path.join(root, file)
                 # image_path starting from base_folder
-                relative_image_path = os.path.relpath(image_path, test_folder)
+                relative_image_path = os.path.relpath(image_path, test_img_folder)
                 image = cv2.imread(image_path)
-                results = model.predict(source=image, verbose=False, imgsz=224)
+                results = model.predict(source=image, verbose=False, imgsz=640)
                 results_human = model_human.predict(source=image, verbose=False, imgsz=640)
                 general_result = yolo_predict_to_coco(results, relative_image_path, image_id)
                 human_result = yolo_predict_to_coco(results_human, relative_image_path, image_id)
