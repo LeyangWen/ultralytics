@@ -126,12 +126,13 @@ if __name__ == '__main__':
     ############################################# modify here #############################################
     test_img_folder = r'Y:\datasets\Datathoni3CE2023\test\images'
     output_folder = r'Y:\datasets\Datathoni3CE2023\DatathonTest\output'
+    coco_gt_file = None
     coco_gt_file = r'Y:\datasets\Datathoni3CE2023\after_augment\test\coco_gt.json'
     ############################################# modify here #############################################
 
-    model_folder = r'F:\F_coding_projects\ultralytics\runs\detect\i3CE2023-datathon-weights\2023-06-20-01-12'
+    model_folder = r'F:\F_coding_projects\ultralytics\runs\detect\i3CE2023-datathon-weights\2023-06-19-15-51'
     model = YOLO(os.path.join(model_folder, "general.pt"))
-    model_human = YOLO(os.path.join(model_folder, "human-2.pt"))
+    model_human = YOLO(os.path.join(model_folder, "human.pt"))
     # iterate through this folder for image files
     count = 0
     for root, dirs, files in os.walk(test_img_folder):
@@ -203,22 +204,23 @@ if __name__ == '__main__':
     end = time.time()
     print(f"Time taken: {end-start} seconds for {count} images")
 
-    # save coco_general
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-    with open(os.path.join(output_folder, 'coco_general.json'), 'w') as f:
-        json.dump(coco_general, f)
-    with open(os.path.join(output_folder, 'coco_merged.json'), 'w') as f:
-        json.dump(coco_merged, f)
-    print(f"Saved coco_general.json and coco_merged.json to {output_folder}")
+    if coco_gt_file is not None:
+        # save coco_general
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        with open(os.path.join(output_folder, 'coco_general.json'), 'w') as f:
+            json.dump(coco_general, f)
+        with open(os.path.join(output_folder, 'coco_merged.json'), 'w') as f:
+            json.dump(coco_merged, f)
+        print(f"Saved coco_general.json and coco_merged.json to {output_folder}")
 
 
-    # coco_read_file = r'Y:\datasets\COCO\annotations\instances_train2017.json'
+        # coco_read_file = r'Y:\datasets\COCO\annotations\instances_train2017.json'
 
-    # coco_dt_file = os.path.join(output_folder, 'coco_merged.json')
-    # mAP = normal_cocoeval(coco_gt_file, coco_dt_file)
-    # print(f"merged mAP: {mAP}")
+        coco_dt_file = os.path.join(output_folder,'test_submit', 'coco_merged.json')
+        mAP = normal_cocoeval(coco_gt_file, coco_dt_file)
+        print(f"merged mAP: {mAP}")
 
-    coco_dt_file = os.path.join(output_folder, 'coco_general.json')
-    mAP = normal_cocoeval(coco_gt_file, coco_dt_file)
-    print(f"general mAP: {mAP}")
+        coco_dt_file = os.path.join(output_folder,'test_submit', 'coco_submit.json')
+        mAP = normal_cocoeval(coco_gt_file, coco_dt_file)
+        print(f"general mAP: {mAP}")
