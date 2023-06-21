@@ -27,7 +27,15 @@ def iou_oa(y_true, y_pred, n_class):
     oa =  tp / len(y_true)
     return (np.mean(iou), oa, iou[0], iou[1], iou[2], iou[3], iou[4], iou[5])
 
-def compute_metrics(coco_true_json, coco_pred_json):
+
+if __name__ == "__main__":
+    ############################################# modify here #############################################
+    coco_true_json = read_json_file(r'Y:\datasets\Datathoni3CE2023\DatathonTest\test2\Testing_Dataset_w_Annotations-20230620T142331Z-001\Testing_Dataset_w_Annotations\gt_annotation_coco.json')
+    coco_pred_json = read_json_file(r"Y:\datasets\Datathoni3CE2023\DatathonTest\output2\test_submit\coco_submit.json")
+    ############################################# modify here #############################################
+
+
+
     image_paths = [item["file_name"] for item in coco_true_json["images"]]
     start_time = time.time()
     m_iou_list, oa_list, iou_0_list, iou_1_list, iou_2_list, iou_3_list, iou_4_list, iou_5_list = [], [], [], [], [], [], [], []
@@ -39,36 +47,36 @@ def compute_metrics(coco_true_json, coco_pred_json):
             if image["file_name"].split(".")[0] == filename:
                 W, H = image["width"], image["height"]
                 break
-    
+
         nc = 6
-        
+
         ## Get y_true
-        y_true = np.ones((W, H, nc))*nc # nc index will be the background
+        y_true = np.ones((W, H, nc)) * nc  # nc index will be the background
         annotations = coco_true_json["annotations"]
         for annotation in annotations:
             image_id = annotation["image_id"]
             if image_id == filename:
                 x, y, w, h = annotation["bbox"]
                 x_start = int(x)
-                x_end = int(x+w)
+                x_end = int(x + w)
                 y_start = int(y)
-                y_end = int(y+h)
-                category_index = annotation["category_id"]
-                y_true[x_start:x_end, y_start:y_end, category_index] = category_index 
+                y_end = int(y + h)
+                category_index = annotation["category_id"]-1
+                y_true[x_start:x_end, y_start:y_end, category_index] = category_index
 
-        ## Get y_pred
-        y_pred = np.ones((W, H, nc))*nc
+                ## Get y_pred
+        y_pred = np.ones((W, H, nc)) * nc
         for pred_val in coco_pred_json:
             image_id = pred_val["file_name"].split(".")[0]
             if image_id == filename:
                 x, y, w, h = pred_val["bbox"]
                 x_start = int(x)
-                x_end = int(x+w)
+                x_end = int(x + w)
                 y_start = int(y)
-                y_end = int(y+h)
-                category_index = pred_val["category_id"]
+                y_end = int(y + h)
+                category_index = pred_val["category_id"]-1
                 y_pred[x_start:x_end, y_start:y_end, category_index] = category_index
-        
+
         m_iou, oa, iou_0, iou_1, iou_2, iou_3, iou_4, iou_5 = iou_oa(y_true.flatten(), y_pred.flatten(), nc)
         m_iou_list.append(m_iou)
         oa_list.append(oa)
@@ -78,10 +86,10 @@ def compute_metrics(coco_true_json, coco_pred_json):
         iou_3_list.append(iou_3)
         iou_4_list.append(iou_4)
         iou_5_list.append(iou_5)
-    
+
     end_time = time.time()
-    print("Elapsed Time:", end_time-start_time)
-    
+    print("Elapsed Time:", end_time - start_time)
+
     df = pd.DataFrame({"IMAGE PATHS": image_paths,
                        "MEAN IOU": m_iou_list,
                        "OA": oa_list,
@@ -98,15 +106,9 @@ def compute_metrics(coco_true_json, coco_pred_json):
     print(averages)
 
     df.loc[1:] = df[:-1].values
-    df.iloc[0,1:] = averages  # Insert the averages row at the first position
+    df.iloc[0, 1:] = averages  # Insert the averages row at the first position
     df.iloc[0, 0] = 'AVERAGE'  # Update the 'IMAGE PATHS' value for the first row
 
     # df.loc[df.shape[0]] = average
     # df.at[df.shape[0] - 1, 'IMAGE PATHS'] = 'AVERAGE'
     df.to_csv('metrics.csv', index=False)
-    return
-
-if __name__ == "__main__":
-    coco_true_json = read_json_file(r"Y:\datasets\Datathoni3CE2023\after_augment\test\coco_gt.json")
-    coco_pred_json = read_json_file(r"Y:\datasets\Datathoni3CE2023\temp_output\coco_general.json")
-    compute_metrics(coco_true_json, coco_pred_json)
